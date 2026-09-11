@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <style>
+    :root {
+      --header-bg: #2B303C;
+      --header-text: #E58C38;
+      --body-bg: #DFDFD5;
+      --drawer-bg: #1F232C;
+      --panel-card: #2B303C;
+      --text-light: #F0F2F5;
+      --accent: #E58C38;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      
+      /* PAGE BACKGROUND IMAGE - Update path to your local image if desired */
+      background-image: url('https://i.imgur.com/ZbaCCPx.jpeg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: var(--body-bg);
+    }
+
+    /* HEADER */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: var(--header-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    header h1 {
+      color: var(--header-text);
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .hamburger-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 28px;
+      height: 20px;
+      padding: 0;
+    }
+
+    .hamburger-btn span {
+      display: block;
+      width: 100%;
+      height: 3px;
+      background-color: var(--header-text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    /* CANVAS */
+    #physics-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+    }
+
+    #physics-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* ABOUT DRAWER */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 100%;
+      max-width: 400px;
+      height: 100%;
+      background-color: var(--drawer-bg);
+      color: var(--text-light);
+      z-index: 21;
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      padding: 20px;
+      background: var(--header-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .drawer-header h2 {
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .drawer-content {
+      padding: 30px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* PROFILE SECTION */
+    .profile-container {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .profile-img {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent);
+      margin-bottom: 15px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+    }
+
+    .profile-name {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .profile-bio {
+      font-size: 0.95rem;
+      color: #b0b5c0;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      padding: 0 10px;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .social-links a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .social-links a:hover {
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    /* DYNAMIC PAGE INDEX */
+    .section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin: 0 0 15px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 8px;
+    }
+
+    .page-index-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .page-index-list li {
+      margin-bottom: 10px;
+    }
+
+    .page-index-list a {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--panel-card);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+      font-weight: 600;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .page-index-list a:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(6px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER BAR -->
+  <header>
+    <h1 id="portfolio-title">RototRobot's Projects</h1>
+    <button class="hamburger-btn" id="menu-btn" aria-label="Open About">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+
+  <!-- PHYSICS CANVAS -->
+  <canvas id="physics-canvas"></canvas>
+
+  <!-- ABOUT DRAWER OVERLAY & PANEL -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <h2>About</h2>
+      <button class="close-btn" id="close-drawer-btn">&times;</button>
+    </div>
+    <div class="drawer-content">
+      
+      <!-- PROFILE SECTION -->
+      <div class="profile-container">
+        <!-- Update src to your local profile photo (e.g., 'images/profile.jpg') -->
+        <img src="https://avatars.githubusercontent.com/u/32212219?v=4" alt="Profile" class="profile-img">
+        <h3 class="profile-name">RototRobot</h3>
+        <p class="profile-bio">
+          Software developer, and VR fanatic.
+        </p>
+        <div class="social-links">
+          <a href="https://github.com/RototRobot" target="_blank">GitHub</a>
+          <a href="https://www.reddit.com/user/Robot_ninja_pirate/" target="_blank">Reddit</a>
+        </div>
+      </div>
+
+      <!-- DYNAMIC PAGE INDEX -->
+      <div class="section-title">Directory</div>
+      <ul id="page-index-list" class="page-index-list">
+        <!-- Dynamic links injected here -->
+      </ul>
+
+    </div>
+  </aside>
+
+  <script>
+    /*******************************************************************
+     * INITIAL BUBBLE DATA CONFIGURATION
+     *******************************************************************/
+    const BUBBLE_CONFIGS = [
+      {
+        id: "1",
+        name: "Flat2VR Mods List",
+        link: "https://rototrobot.github.io/VRMods-List/",
+        size: 175,
+        color: "#0088cc",
+        bgImage: "https://i.imgur.com/qnepF8D.png"
+      },
+      {
+        id: "2",
+        name: "Top VR Games List",
+        link: "https://rototrobot.github.io/VR-Games-List/",
+        size: 125,
+        color: "#0077be",
+        bgImage: "https://i.imgur.com/438ibNH.png"
+      },
+      {
+        id: "3",
+        name: "Upcoming VR games List",
+        link: "https://rototrobot.github.io/VR-upcoming-list/",
+        size: 100,
+        color: "#0099dd",
+        bgImage: "https://i.imgur.com/Boepccn.png"
+      },
+      {
+        id: "4",
+        name: "Sin-Episodes-VR-Port",
+        link: "https://github.com/RototRobot/Sin-Episodes-VR-Port",
+        size: 145,
+        color: "#0088dd",
+        bgImage: "https://i.imgur.com/DtT6c76.png"
+      },
+      {
+        id: "5",
+        name: "Broken-Spectre-PCVR-Fix",
+        link: "https://github.com/RototRobot/Broken-Spectre-PCVR-Fix",
+        size: 100,
+        color: "#0088dd",
+        bgImage: "https://i.imgur.com/P5O72sF.png"
+      },
+      {
+        id: "6",
+        name: "Good VR Spreadsheet compendium",
+        link: "https://docs.google.com/spreadsheets/d/1cnu3R813-RiJv9EPJD54qC7vBCrbh9xALIqz7hl5K-o/edit?usp=sharing",
+        size: 135,
+        color: "#0088dd",
+        bgImage: "https://i.imgur.com/MFH0HM9.png"
+      },
+      {
+        id: "7",
+        name: "Tomb-Raider-Legend-VR-Port",
+        link: "#TBA",
+        size: 110,
+        color: "#0088dd",
+        bgImage: "https://i.imgur.com/tQamsL8.png"
+      },        
+      {
+        id: "8",
+        name: "Dark-Messiah-of-Might-and-Magic-VR-Port",
+        link: "#TBA",
+        size: 115,
+        color: "#0088dd",
+        bgImage: "https://i.imgur.com/8LHRHNC.png"
+      },          
+    ];
+
+    // Global Physics Settings
+    const physicsSettings = {
+      driftSpeed: 0.05,
+      bounciness: 0.85,
+      friction: 0.992,
+      mousePushForce: 0.4,
+      mousePushRadius: 180
+    };
+
+    // Image Caching
+    const imageCache = new Map();
+
+    function getOrLoadImage(url) {
+      if (!url) return null;
+      if (imageCache.has(url)) return imageCache.get(url);
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = url;
+      imageCache.set(url, img);
+      return img;
+    }
+
+    // Setup Canvas
+    const canvas = document.getElementById("physics-canvas");
+    const ctx = canvas.getContext("2d");
+    const HEADER_HEIGHT = 60;
+
+    let width = 0;
+    let height = 0;
+    let dpr = window.devicePixelRatio || 1;
+
+    function resizeCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Bubble Class
+    class Bubble {
+      constructor(config) {
+        this.id = config.id || Math.random().toString(36).substring(2, 9);
+        this.name = config.name || "UNNAMED";
+        this.link = config.link || "#";
+        this.radius = config.size || 80;
+        this.color = config.color || "#0088cc";
+        this.bgImage = config.bgImage || "";
+        
+        // Spawn randomly within canvas boundaries
+        this.x = this.radius + Math.random() * (width - this.radius * 2);
+        this.y = HEADER_HEIGHT + this.radius + Math.random() * (height - HEADER_HEIGHT - this.radius * 2);
+
+        // Initial random velocity
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.5 + Math.random() * 1.5;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+
+        this.mass = Math.PI * this.radius * this.radius;
+        this.isDragged = false;
+
+        // RANDOMIZED GLOSS / SHINE PARAMETERS PER BUBBLE
+        // Angle offsets for glare placement (around the upper arc)
+        this.glareAngle = (Math.PI * 1.25) + (Math.random() - 0.5) * 0.8; 
+        this.glareDist = 0.45 + Math.random() * 0.15; // Distance from center
+        this.glareScaleX = 0.25 + Math.random() * 0.08;
+        this.glareScaleY = 0.12 + Math.random() * 0.05;
+        this.glareRotation = (Math.random() - 0.5) * 0.5;
+        this.secondaryGlareOffset = 0.2 + Math.random() * 0.15;
+        this.secondaryGlareSize = 0.06 + Math.random() * 0.04;
+      }
+
+      update() {
+        if (!this.isDragged) {
+          // Add subtle ambient drift
+          this.vx += (Math.random() - 0.5) * physicsSettings.driftSpeed;
+          this.vy += (Math.random() - 0.5) * physicsSettings.driftSpeed;
+
+          // Apply velocity & friction
+          this.vx *= physicsSettings.friction;
+          this.vy *= physicsSettings.friction;
+
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Wall collision checks
+          const minX = this.radius;
+          const maxX = width - this.radius;
+          const minY = HEADER_HEIGHT + this.radius;
+          const maxY = height - this.radius;
+
+          if (this.x < minX) {
+            this.x = minX;
+            this.vx *= -physicsSettings.bounciness;
+          } else if (this.x > maxX) {
+            this.x = maxX;
+            this.vx *= -physicsSettings.bounciness;
+          }
+
+          if (this.y < minY) {
+            this.y = minY;
+            this.vy *= -physicsSettings.bounciness;
+          } else if (this.y > maxY) {
+            this.y = maxY;
+            this.vy *= -physicsSettings.bounciness;
+          }
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 1. Base Shadow under bubble
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 8, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+        ctx.shadowColor = "rgba(0,0,0,0.2)";
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 10;
+        ctx.fill();
+        ctx.restore();
+
+        // 2. Main Circle Boundary & Image/Color Clipping
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Base color fill
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        // Background Image if present
+        const img = getOrLoadImage(this.bgImage);
+        if (img && img.complete && img.naturalWidth !== 0) {
+          const aspect = img.width / img.height;
+          let drawW = this.radius * 2;
+          let drawH = this.radius * 2;
+          if (aspect > 1) {
+            drawW = drawH * aspect;
+          } else {
+            drawH = drawW / aspect;
+          }
+          ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        }
+
+        // Inner Vignette / Edge Fade
+        const edgeGrd = ctx.createRadialGradient(0, 0, this.radius * 0.7, 0, 0, this.radius);
+        edgeGrd.addColorStop(0, "rgba(0,0,0,0)");
+        edgeGrd.addColorStop(1, "rgba(0, 0, 0, 0.45)");
+        ctx.fillStyle = edgeGrd;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3D Spherical Lighting Overlay
+        const lightX = Math.cos(this.glareAngle) * this.radius * 0.4;
+        const lightY = Math.sin(this.glareAngle) * this.radius * 0.4;
+        const sphereGrd = ctx.createRadialGradient(
+          lightX, lightY, this.radius * 0.1,
+          0, 0, this.radius
+        );
+        sphereGrd.addColorStop(0, "rgba(255, 255, 255, 0.25)");
+        sphereGrd.addColorStop(0.8, "rgba(0, 0, 0, 0.1)");
+        sphereGrd.addColorStop(1, "rgba(0, 0, 0, 0.5)");
+        ctx.fillStyle = sphereGrd;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. RANDOMIZED GLOSSY SPECULAR HIGHLIGHTS
+        const gx = Math.cos(this.glareAngle) * this.radius * this.glareDist;
+        const gy = Math.sin(this.glareAngle) * this.radius * this.glareDist;
+
+        // Primary Large Oval Glare
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(this.glareRotation);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.radius * this.glareScaleX, this.radius * this.glareScaleY, 0, 0, Math.PI * 2);
+        const glareGrd1 = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * this.glareScaleX);
+        glareGrd1.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+        glareGrd1.addColorStop(0.7, "rgba(255, 255, 255, 0.6)");
+        glareGrd1.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = glareGrd1;
+        ctx.fill();
+        ctx.restore();
+
+        // Secondary Small Dot Glare
+        const sgx = Math.cos(this.glareAngle + this.secondaryGlareOffset) * this.radius * (this.glareDist + 0.1);
+        const sgy = Math.sin(this.glareAngle + this.secondaryGlareOffset) * this.radius * (this.glareDist + 0.1);
+        ctx.save();
+        ctx.translate(sgx, sgy);
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * this.secondaryGlareSize, 0, Math.PI * 2);
+        const glareGrd2 = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * this.secondaryGlareSize);
+        glareGrd2.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+        glareGrd2.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = glareGrd2;
+        ctx.fill();
+        ctx.restore();
+
+        // Bottom Soft Curved Rim Light (opposite side of primary glare)
+        ctx.save();
+        ctx.beginPath();
+        const rimAngle = this.glareAngle + Math.PI;
+        ctx.arc(0, 0, this.radius * 0.88, rimAngle - 0.5, rimAngle + 0.5);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+        ctx.lineWidth = this.radius * 0.05;
+        ctx.lineCap = "round";
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.restore(); // end clip area
+
+        // 4. AUTO-SCALING CENTERED TEXT LABEL
+        ctx.save();
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";  
+
+        // Maximum available width inside bubble (allowing padding from edge)
+        const maxAllowedWidth = this.radius * 1.55; 
+        
+        // Start from a max font size based on radius
+        let fontSize = Math.floor(this.radius * 0.35);
+        ctx.font = `700 ${fontSize}px 'Segoe UI', sans-serif`;
+
+        // Measure text width and scale down until it fits inside maxAllowedWidth
+        let textWidth = ctx.measureText(this.name).width;
+        while (textWidth > maxAllowedWidth && fontSize > 10) {
+          fontSize -= 1;
+          ctx.font = `700 ${fontSize}px 'Segoe UI', sans-serif`;
+          textWidth = ctx.measureText(this.name).width;
+        }
+
+        // Ultra-prominent shadow + dark text outline
+        ctx.shadowColor = "rgba(0, 0, 0, 1.0)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 3;
+
+        // 1. Draw dark outline stroke around text
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.9)";
+        ctx.lineWidth = Math.max(3, Math.floor(fontSize * 0.15)); // Scales width with font size
+        ctx.lineJoin = "round";
+        ctx.strokeText(this.name, 0, 0);
+
+        // 2. Fill the inner text in crisp white
+        ctx.fillText(this.name, 0, 0);
+        ctx.restore();
+
+        ctx.restore();
+      }
+    }
+
+    // Initialize Bubbles
+    let bubbles = BUBBLE_CONFIGS.map(cfg => new Bubble(cfg));
+
+    // Circle Collision Engine
+    function resolveCollisions() {
+      for (let i = 0; i < bubbles.length; i++) {
+        for (let j = i + 1; j < bubbles.length; j++) {
+          const b1 = bubbles[i];
+          const b2 = bubbles[j];
+
+          const dx = b2.x - b1.x;
+          const dy = b2.y - b1.y;
+          const dist = Math.hypot(dx, dy);
+          const minDist = b1.radius + b2.radius;
+
+          if (dist < minDist) {
+            const overlap = minDist - dist;
+            const nx = dist === 0 ? 1 : dx / dist;
+            const ny = dist === 0 ? 0 : dy / dist;
+
+            if (!b1.isDragged) {
+              b1.x -= nx * overlap * 0.5;
+              b1.y -= ny * overlap * 0.5;
+            }
+            if (!b2.isDragged) {
+              b2.x += nx * overlap * 0.5;
+              b2.y += ny * overlap * 0.5;
+            }
+
+            const kx = b1.vx - b2.vx;
+            const ky = b1.vy - b2.vy;
+            const p = 2 * (nx * kx + ny * ky) / (b1.mass + b2.mass);
+
+            if (p > 0) {
+              if (!b1.isDragged) {
+                b1.vx -= p * b2.mass * nx * physicsSettings.bounciness;
+                b1.vy -= p * b2.mass * ny * physicsSettings.bounciness;
+              }
+              if (!b2.isDragged) {
+                b2.vx += p * b1.mass * nx * physicsSettings.bounciness;
+                b2.vy += p * b1.mass * ny * physicsSettings.bounciness;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Pointer Interaction
+    let mouseX = -1000;
+    let mouseY = -1000;
+    let draggedBubble = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    let mouseVelX = 0;
+    let mouseVelY = 0;
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+
+      pointerStartX = px;
+      pointerStartY = py;
+      lastMouseX = px;
+      lastMouseY = py;
+
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        const dist = Math.hypot(px - b.x, py - b.y);
+        if (dist <= b.radius) {
+          draggedBubble = b;
+          b.isDragged = true;
+          dragOffsetX = px - b.x;
+          dragOffsetY = py - b.y;
+          bubbles.splice(i, 1);
+          bubbles.push(b);
+          break;
+        }
+      }
+    });
+
+    window.addEventListener("pointermove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+
+      mouseVelX = mouseX - lastMouseX;
+      mouseVelY = mouseY - lastMouseY;
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
+
+      if (draggedBubble) {
+        draggedBubble.x = mouseX - dragOffsetX;
+        draggedBubble.y = mouseY - dragOffsetY;
+      } else if (physicsSettings.mousePushForce > 0) {
+        bubbles.forEach(b => {
+          const dx = b.x - mouseX;
+          const dy = b.y - mouseY;
+          const dist = Math.hypot(dx, dy);
+          if (dist < physicsSettings.mousePushRadius && dist > 0) {
+            const force = (1 - dist / physicsSettings.mousePushRadius) * physicsSettings.mousePushForce;
+            b.vx += (dx / dist) * force;
+            b.vy += (dy / dist) * force;
+          }
+        });
+      }
+    });
+
+    window.addEventListener("pointerup", (e) => {
+      if (draggedBubble) {
+        draggedBubble.vx = mouseVelX * 0.8;
+        draggedBubble.vy = mouseVelY * 0.8;
+        draggedBubble.isDragged = false;
+
+        const distMoved = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
+        if (distMoved < 6 && draggedBubble.link) {
+          if (draggedBubble.link.startsWith("http") || draggedBubble.link.startsWith("#")) {
+            window.location.href = draggedBubble.link;
+          } else {
+            alert(`Navigating to: ${draggedBubble.link}`);
+          }
+        }
+        draggedBubble = null;
+      }
+    });
+
+    // Animation Loop
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      bubbles.forEach(b => b.update());
+      resolveCollisions();
+      bubbles.forEach(b => b.draw(ctx));
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    /*******************************************************************
+     * DRAWER CONTROLS & DYNAMIC INDEX RENDERER
+     *******************************************************************/
+    const drawer = document.getElementById("drawer");
+    const overlay = document.getElementById("drawer-overlay");
+    const menuBtn = document.getElementById("menu-btn");
+    const closeBtn = document.getElementById("close-drawer-btn");
+    const pageIndexList = document.getElementById("page-index-list");
+
+    function renderPageIndex() {
+      pageIndexList.innerHTML = "";
+      bubbles.forEach(b => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = b.link;
+        a.textContent = b.name;
+        
+        a.addEventListener("click", (e) => {
+          if(!b.link.startsWith("http") && !b.link.startsWith("#")) {
+            e.preventDefault();
+            alert(`Navigating to: ${b.link}`);
+          }
+          closeDrawer();
+        });
+
+        li.appendChild(a);
+        pageIndexList.appendChild(li);
+      });
+    }
+
+    function openDrawer() {
+      drawer.classList.add("open");
+      overlay.classList.add("open");
+      renderPageIndex();
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove("open");
+      overlay.classList.remove("open");
+    }
+
+    menuBtn.addEventListener("click", openDrawer);
+    closeBtn.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+  </script>
+</body>
+</html>
